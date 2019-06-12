@@ -5,7 +5,8 @@
 
   In this file you will be creating three constructor functions: GameObject, CharacterStats, Humanoid.  
 
-  At the bottom of this file are 3 objects that all end up inheriting from Humanoid.  Use the objects at the bottom of the page to test your constructor functions.
+  At the bottom of this file are 3 objects that all end up inheriting from Humanoid.  
+  Use the objects at the bottom of the page to test your constructor functions.
   
   Each constructor function has unique properties and methods that are defined in their block comments below:
 */
@@ -18,12 +19,30 @@
   * destroy() // prototype method that returns: `${this.name} was removed from the game.`
 */
 
+function GameObject(stats){
+  this.createdAt = stats.createdAt;
+  this.name = stats.name;
+  this.dimensions = stats.dimensions;
+}
+GameObject.prototype.destroy = function(){
+  return `${this.name} was removed from the game.`;
+};
+
 /*
   === CharacterStats ===
   * healthPoints
   * takeDamage() // prototype method -> returns the string '<object name> took damage.'
   * should inherit destroy() from GameObject's prototype
 */
+function CharacterStats(stats){
+  GameObject.call(this, stats);
+  this.isChild = stats.isChild;
+  this.healthPoints = stats.healthPoints;
+}
+CharacterStats.prototype = Object.create(GameObject.prototype);
+CharacterStats.prototype.takeDamage = function(){
+  return `${this.name} took damage.`;
+};
 
 /*
   === Humanoid (Having an appearance or character resembling that of a human.) ===
@@ -34,6 +53,17 @@
   * should inherit destroy() from GameObject through CharacterStats
   * should inherit takeDamage() from CharacterStats
 */
+function Humanoid(stats){
+  CharacterStats.call(this, stats);
+  this.isChild = stats.isChild;
+  this.team = stats.team;
+  this.weapons = stats.weapons;
+  this.language = stats.language;
+}
+Humanoid.prototype = Object.create(CharacterStats.prototype);
+Humanoid.prototype.greet = function(){
+  return `${this.name} offers a greeting in ${this.language}.`;
+};
  
 /*
   * Inheritance chain: GameObject -> CharacterStats -> Humanoid
@@ -43,7 +73,7 @@
 
 // Test you work by un-commenting these 3 objects and the list of console logs below:
 
-/*
+
   const mage = new Humanoid({
     createdAt: new Date(),
     dimensions: {
@@ -104,9 +134,95 @@
   console.log(archer.greet()); // Lilith offers a greeting in Elvish.
   console.log(mage.takeDamage()); // Bruce took damage.
   console.log(swordsman.destroy()); // Sir Mustachio was removed from the game.
-*/
+
 
   // Stretch task: 
   // * Create Villain and Hero constructor functions that inherit from the Humanoid constructor function.  
-  // * Give the Hero and Villains different methods that could be used to remove health points from objects which could result in destruction if health gets to 0 or drops below 0;
+  // * Give the Hero and Villains different methods that could be used to remove health points 
+  //   from objects which could result in destruction if health gets to 0 or drops below 0;
   // * Create two new objects, one a villain and one a hero and fight it out with methods!
+
+  function Affiliation(stats){
+    Humanoid.call(this, stats);
+    this.isChild = stats.isChild;
+    this.isHero = stats.isHero;
+    this.hurtMessages = stats.hurtMessages;
+    this.strength = stats.strength;
+  }
+  Affiliation.prototype = Object.create(Humanoid.prototype);
+  Affiliation.prototype.hurt = function(dmg){
+    this.healthPoints--;
+    if(this.healthPoints<=0){
+      return this.destroy();
+    }
+    else{
+      return this.name + ': ' + this.hurtMessages[Math.floor(Math.random() * this.hurtMessages.length)];
+    }
+  }
+
+  Affiliation.prototype.attack = function(target){
+    let accuracy = Math.floor(Math.random() * 20) + 1;
+    if( accuracy > 10){
+      console.log(`${this.name}'s attack hits ${target.name}, dealing ${this.strength} points of damage.`);
+      if(accuracy===20)
+        return target.hurt(this.strength*2);
+      else
+        return target.hurt(this.strength);
+    }
+    else{
+      //target.miss();
+      return `${this.name}'s attack misses.`;
+    }
+  }
+
+  const hero = new Affiliation({
+    createdAt: new Date(),
+    dimensions: {
+      length: 2,
+      width: 2,
+      height: 2,
+    },
+    healthPoints: 50,
+    name: 'The Crimson Oil Lamp',
+    team: 'The League of the Just',
+    weapons: [
+      'Enchanted Jewelry',
+    ],
+    language: 'Common Tongue',
+    isHero: true,
+    hurtMessages: ['Ouchies...', 'How can this be!?', 'Argh!'],
+    strength: 2,
+  });
+
+  const villain = new Affiliation({
+    createdAt: new Date(),
+    dimensions: {
+      length: 1,
+      width: 2,
+      height: 4,
+    },
+    healthPoints: 80,
+    name: 'Dr. Sinestro',
+    team: 'Squad of Evilry',
+    weapons: [
+      'Math',
+      'Science'
+    ],
+    language: 'Nerd Speak',
+    isHero: false,
+    hurtMessages: ['Tis but a scratch.', 'Just a flesh wound.', 'Right! I\'ll do you for that!', ' I\'m invincible!'],
+    strength: 1,
+  });
+
+  let turn = 1;
+  while(hero.healthPoints > 0 && villain.healthPoints > 0){
+    if(turn>0){
+      console.log(hero.attack(villain));
+      turn = -turn;
+    }
+    else{
+      console.log(villain.attack(hero));
+      turn = -turn;
+    }
+
+  }
